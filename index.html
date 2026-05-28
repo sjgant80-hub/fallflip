@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1a17">
+<title>FallFlip · the mirror</title>
+<meta name="description" content="Someone self-promotes on your LinkedIn post? Flip it. Proportional response on their post and yours. Single HTML tool, data on-device.">
+<link rel="manifest" href='data:application/manifest+json,{"name":"FallFlip","short_name":"FallFlip","start_url":".","display":"standalone","background_color":"#1a1a17","theme_color":"#e8a012","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 fill=%22%231a1a17%22/><text x=%2232%22 y=%2244%22 text-anchor=%22middle%22 font-size=%2236%22 fill=%22%23e8a012%22 font-family=%22sans-serif%22 font-weight=%22bold%22>⇄</text></svg>","sizes":"any","type":"image/svg+xml"}]}'>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #1a1a17;
+  --bg-2: #23231f;
+  --bg-3: #2d2d28;
+  --line: #3a3a33;
+  --text: #f5f1e8;
+  --muted: #948f80;
+  --gold: #e8a012;
+  --gold-dim: #b87d0d;
+  --green: #44aa44;
+  --red: #ff4444;
+  --blue: #4a9eff;
+  --purple: #a472d8;
+  --r: 12px;
+}
+html, body { background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100dvh; -webkit-font-smoothing: antialiased; }
+body { padding-bottom: env(safe-area-inset-bottom); }
+h1, h2, h3 { font-family: 'Syne', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.02em; }
+
+header {
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  position: sticky; top: 0; z-index: 50; backdrop-filter: blur(8px);
+}
+.brand-wrap { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark {
+  width: 44px; height: 44px; background: linear-gradient(135deg, var(--gold), #d68f08);
+  border-radius: 10px; display: grid; place-items: center; color: #1a1a17;
+  font-family: 'Syne'; font-weight: 800; font-size: 24px;
+}
+.brand-name { font-family: 'Syne'; font-weight: 800; font-size: 22px; }
+.brand-sub { color: var(--muted); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+.head-actions { display: flex; gap: 8px; }
+.icon-btn { background: var(--bg-2); border: 1px solid var(--line); color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 14px; cursor: pointer; }
+.icon-btn:active { background: var(--bg-3); }
+
+main { padding: 20px 16px 100px; max-width: 1100px; margin: 0 auto; }
+
+.panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .panel-row { grid-template-columns: 1fr; } }
+
+.card { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; margin-bottom: 16px; }
+.card-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.card-hd h2 { font-size: 18px; }
+.card-hd h3 { font-size: 14px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.06em; }
+
+.field { margin-bottom: 14px; }
+.field label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.field input, .field select, .field textarea {
+  width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--text);
+  padding: 12px; border-radius: 8px; font-size: 15px; font-family: inherit;
+}
+.field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--gold); outline-offset: -1px; }
+.field textarea { min-height: 90px; resize: vertical; line-height: 1.5; }
+
+.btn { background: var(--gold); color: #1a1a17; border: none; padding: 14px 18px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; touch-action: manipulation; font-family: inherit; width: 100%; }
+.btn:hover { background: var(--gold-dim); }
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.secondary { background: var(--bg-3); color: var(--text); border: 1px solid var(--line); }
+.btn.small { padding: 8px 14px; font-size: 13px; width: auto; }
+
+/* ═══ HERO ═══ */
+.hero { padding: 28px 0 24px; text-align: left; }
+.hero h1 { font-size: 36px; line-height: 1.1; margin-bottom: 8px; }
+.hero h1 .accent { color: var(--gold); }
+.hero p { color: var(--muted); font-size: 16px; max-width: 600px; }
+.hero .rule { background: var(--bg-2); border-left: 3px solid var(--gold); padding: 12px 16px; margin-top: 16px; border-radius: 0 8px 8px 0; font-size: 14px; max-width: 700px; }
+.hero .rule b { color: var(--gold); }
+
+/* ═══ LEVEL METER ═══ */
+.level-meter { display: flex; gap: 4px; margin: 8px 0 12px; }
+.level-dot { flex: 1; height: 8px; background: var(--bg-3); border-radius: 4px; transition: background 0.2s; }
+.level-dot.active.l1 { background: #4a9eff; }
+.level-dot.active.l2 { background: #44aa44; }
+.level-dot.active.l3 { background: #e8a012; }
+.level-dot.active.l4 { background: #ff8844; }
+.level-dot.active.l5 { background: #ff4444; }
+.level-label { font-size: 13px; color: var(--muted); }
+.level-label .lv { color: var(--gold); font-weight: 700; font-family: 'Syne'; font-size: 16px; }
+
+/* ═══ OUTPUT ═══ */
+.output-block { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px; font-family: 'IBM Plex Mono', ui-monospace, "SF Mono", Menlo, monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+.output-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.output-meta .target { color: var(--text); font-weight: 600; }
+.copy-btn { background: var(--bg-3); border: 1px solid var(--line); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.copy-btn:hover { background: var(--gold); color: #1a1a17; border-color: var(--gold); }
+.copy-btn:active { transform: scale(0.95); }
+.copy-btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+
+.tag { display: inline-block; background: var(--bg-3); color: var(--muted); padding: 2px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 6px; }
+.tag.gold { color: var(--gold); }
+.tag.green { color: var(--green); }
+.tag.red { color: var(--red); }
+
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.toolbar .btn { width: auto; flex: 1; min-width: 140px; }
+
+.analysis { background: rgba(232,160,18,0.08); border: 1px solid rgba(232,160,18,0.3); padding: 12px 14px; border-radius: 8px; margin: 12px 0; font-size: 14px; }
+.analysis .row { padding: 4px 0; display: flex; justify-content: space-between; }
+.analysis .lbl { color: var(--muted); }
+.analysis .val { color: var(--text); font-weight: 600; text-align: right; }
+
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: center; justify-content: center; padding: 16px; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--bg-2); width: 100%; max-width: 640px; border-radius: 14px; padding: 24px; max-height: 90vh; overflow-y: auto; }
+.modal-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-hd h2 { font-size: 22px; }
+.modal-close { background: none; border: none; color: var(--muted); font-size: 28px; cursor: pointer; padding: 0 8px; line-height: 1; }
+
+.toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #1a1a17; padding: 12px 22px; border-radius: 24px; font-weight: 700; z-index: 200; box-shadow: 0 6px 24px rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(-10px); }
+
+.log-item { background: var(--bg-3); border-radius: 8px; padding: 12px; margin-bottom: 10px; font-size: 13px; }
+.log-item .hd { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.log-item .when { color: var(--muted); font-size: 11px; }
+.log-item .quote { color: var(--muted); font-style: italic; font-size: 12px; margin-top: 6px; padding: 6px 8px; background: var(--bg); border-radius: 4px; }
+
+.tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.tool-chip { background: var(--bg-3); border: 1px solid var(--line); padding: 10px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.tool-chip.active { border-color: var(--gold); background: rgba(232,160,18,0.1); }
+.tool-chip .name { font-weight: 700; color: var(--gold); }
+.tool-chip .domain { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+footer { text-align: center; padding: 30px 16px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); margin-top: 40px; }
+footer a { color: var(--gold); text-decoration: none; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-wrap">
+    <div class="brand">
+      <div class="brand-mark">⇄</div>
+      <div>
+        <div class="brand-name">FallFlip</div>
+        <div class="brand-sub">the mirror · proportional response</div>
+      </div>
+    </div>
+    <div class="head-actions">
+      <button class="icon-btn" id="btnLog">📋 Log</button>
+      <button class="icon-btn" id="btnSettings">⚙ Settings</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<div class="hero">
+  <h1>Someone <span class="accent">self-promoted</span> on your post.</h1>
+  <p>Paste their comment. Paste their profile. Get back two professional responses — one for your post, one for theirs. Proportional. Sharp. Useful to other readers.</p>
+  <div class="rule">
+    <b>The rule:</b> only flip when they started it. This is a mirror, not an attack. They brought their product to your audience → you bring yours to theirs. Fair game. They set the rules.
+  </div>
+</div>
+
+<div class="panel-row">
+
+  <!-- ═══ INPUT ═══ -->
+  <section>
+    <div class="card">
+      <div class="card-hd"><h2>The spam</h2></div>
+      <div class="field">
+        <label>Their comment text</label>
+        <textarea id="inComment" placeholder='"Great post Simon! 🔥 We&apos;ve built an AI-powered CRM at SalesBot.io that automates exactly this. Check it out!"'></textarea>
+      </div>
+      <div class="field">
+        <label>Their profile URL / handle</label>
+        <input id="inProfile" placeholder="linkedin.com/in/spammer-mcspam or @handle">
+      </div>
+      <div class="field">
+        <label>Their latest post URL (optional · helps counter)</label>
+        <input id="inTheirPost" placeholder="linkedin.com/posts/...">
+      </div>
+      <div class="field">
+        <label>Their post topic (optional · for the counter)</label>
+        <input id="inTopic" placeholder='"5 ways to automate sales pipelines"'>
+      </div>
+      <button class="btn" id="btnFlip">⇄ Flip it</button>
+    </div>
+
+    <div class="card" id="analysisCard" style="display:none">
+      <div class="card-hd"><h3>Analysis · α</h3></div>
+      <div class="level-meter">
+        <div class="level-dot" data-l="1"></div>
+        <div class="level-dot" data-l="2"></div>
+        <div class="level-dot" data-l="3"></div>
+        <div class="level-dot" data-l="4"></div>
+        <div class="level-dot" data-l="5"></div>
+      </div>
+      <div class="level-label">Spam level: <span class="lv" id="anLevel">·</span> · <span id="anLevelName">·</span></div>
+      <div class="analysis" id="analysisDetail"></div>
+    </div>
+  </section>
+
+  <!-- ═══ OUTPUT ═══ -->
+  <section>
+    <div class="card" id="outputCard">
+      <div class="card-hd"><h2>The flip</h2></div>
+      <div id="outputEmpty" class="empty">
+        <div class="icon">⇄</div>
+        <p>Paste their comment on the left, hit <b>Flip it</b>, get back two responses ready to copy.</p>
+      </div>
+      <div id="outputBody" style="display:none">
+        <div style="margin-bottom:18px">
+          <div class="output-meta">
+            <span><span class="tag gold">β</span> Reply on <span class="target">YOUR post</span></span>
+            <button class="copy-btn" data-copy="outReply">📋 Copy</button>
+          </div>
+          <div class="output-block" id="outReply">·</div>
+        </div>
+        <div style="margin-bottom:18px">
+          <div class="output-meta">
+            <span><span class="tag gold">γ</span> Comment on <span class="target">THEIR post</span></span>
+            <button class="copy-btn" data-copy="outCounter">📋 Copy</button>
+          </div>
+          <div class="output-block" id="outCounter">·</div>
+        </div>
+        <div style="margin-bottom:18px">
+          <div class="output-meta">
+            <span><span class="tag gold">δ</span> DM (escalate · optional)</span>
+            <button class="copy-btn" data-copy="outDM">📋 Copy</button>
+          </div>
+          <div class="output-block" id="outDM">·</div>
+        </div>
+        <div class="toolbar">
+          <button class="btn secondary small" onclick="regenerateAll()">↻ Regenerate</button>
+          <button class="btn secondary small" onclick="logCurrent()">📌 Log it</button>
+          <button class="btn secondary small" onclick="addToBlacklist()">🚫 Blacklist</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  FallFlip · ◊·κ=1 · single HTML · data on your device · <a href="https://github.com/sjgant80-hub/fallflip" target="_blank">source</a>
+</footer>
+
+</main>
+
+<!-- ═══ MODALS ═══ -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <h2 id="modalTitle">·</h2>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════
+// FallFlip · sovereign single-file mirror tool
+// ◊·κ=1 · v19 field-seed compliant · prime 211
+// ═══════════════════════════════════════════
+
+const VERSION = '1.0.0';
+const PRIME = 211;
+const STORE = 'fallflip-state';
+
+let state = {
+  log: [],            // every flip · for review
+  blacklist: [],      // repeat offenders → harsher templates
+  whitelist: [],      // converted spammers · use lighter templates
+  tools: [
+    { id: 'fallforce',           name: 'FallForce',           domain: 'sovereign CRM',                        match: ['crm', 'sales', 'pipeline', 'leads', 'customer'] },
+    { id: 'fallbrief',           name: 'FallBrief',           domain: 'UK legal research',                    match: ['legal', 'law', 'lawyer', 'compliance', 'court'] },
+    { id: 'fallaccount-trades',  name: 'FallAccount Trades',  domain: 'sovereign accounts for UK trades',     match: ['account', 'tax', 'mtd', 'invoice', 'trade', 'builder'] },
+    { id: 'audiofabric',         name: 'AudioFabric',         domain: '3D music visualisation',               match: ['music', 'audio', 'visual', 'art', 'creative'] },
+    { id: 'gymos',               name: 'GymOS',               domain: 'sovereign gym ops',                    match: ['gym', 'fitness', 'training', 'member'] },
+    { id: 'apex',                name: 'Apex Procurement',    domain: 'sovereign procurement w/ audit chain', match: ['procurement', 'purchasing', 'rfq', 'vendor'] },
+    { id: 'fallcore',            name: 'FallCore',            domain: 'local LLM cascade for enterprise',     match: ['llm', 'ai', 'gpt', 'agent', 'enterprise', 'local'] },
+    { id: 'fallflip',            name: 'FallFlip',            domain: 'this · the mirror',                    match: ['linkedin', 'engagement', 'growth', 'follower', 'social'] },
+  ],
+  settings: {
+    yourName: 'Simon',
+    yourProfile: 'linkedin.com/in/simon-gant-295b56180',
+    geminiKey: '',
+    defaultTool: 'fallforce',
+    autoLog: true,
+  },
+  meta: { created: Date.now(), version: VERSION },
+};
+
+// ═══ STORAGE ═══
+async function saveState() {
+  try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {}
+}
+async function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE);
+    if (raw) state = Object.assign(state, JSON.parse(raw));
+  } catch (e) {}
+}
+
+// ═══ TOAST ═══
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ═══ AGENT α · COMMENT ANALYSER ═══
+// Detects: spam level 1-5, their product, their domain, their archetype
+function analyseComment(text, profile) {
+  const t = (text || '').toLowerCase();
+  const tOrig = text || '';
+  let level = 1;
+  let archetype = 'subtle';
+  let signals = [];
+
+  // Level 5: pure bot / link drop
+  if (/visit.*\.(com|io|ai)|click.*link|dm.*details|🔥+.*\.(com|io|ai)|\bbtw\b.*(check|see|try)/i.test(tOrig)) {
+    level = 5; archetype = 'bot/link-drop';
+  }
+  // Level 4: emoji-heavy + irrelevant CTA
+  else if ((tOrig.match(/[🔥💪🚀✨🙌]/g) || []).length >= 2 && /(dm me|check (this|it) out|book a call|sign up|register)/i.test(tOrig)) {
+    level = 4; archetype = 'spam/irrelevant';
+  }
+  // Level 3: direct product mention with explicit CTA
+  else if (/(i (built|made|created)|we('ve)? built|check out|have a look|our (platform|tool|app|service))/i.test(tOrig)
+        && /(at |on |find )?\b[a-z0-9-]+\.(com|io|ai|co|app|dev)\b/i.test(tOrig)) {
+    level = 3; archetype = 'direct promo';
+  }
+  // Level 3 alt: product name + CTA
+  else if (/(launching|launched|introduce|introducing|our (new|latest))/i.test(tOrig)) {
+    level = 3; archetype = 'soft launch';
+  }
+  // Level 2: soft plug
+  else if (/(we do|we offer|we help|in (this|that) space|similar (work|approach|tool))/i.test(tOrig)
+        && /(at |with )?\b[a-z0-9-]+\.(com|io|ai|co|app|dev)\b/i.test(tOrig)) {
+    level = 2; archetype = 'soft plug';
+  }
+  // Level 2 alt: mention own product without explicit link
+  else if (/(my|our) (tool|product|app|platform|service|company|startup)/i.test(tOrig)) {
+    level = 2; archetype = 'product mention';
+  }
+  // Level 1: subtle reference
+  else if (/\b(also|similar|comparable|too)\b.*(working|building|developing)/i.test(tOrig)
+        || /interesting.*(angle|approach|way)/i.test(tOrig)) {
+    level = 1; archetype = 'subtle nudge';
+  }
+
+  // Extract their product/service
+  const productMatch = tOrig.match(/\b([A-Z][a-zA-Z0-9]{2,15})(?:\.(com|io|ai|co|app|dev))?(?:\b|\s|$)/);
+  const urlMatch = tOrig.match(/\b([a-z0-9-]+\.(com|io|ai|co|app|dev))/i);
+  const product = (urlMatch ? urlMatch[1] : (productMatch && productMatch[1].length > 3 ? productMatch[1] : null));
+
+  // Detect domain from keywords
+  const domainKeywords = {
+    crm: /\b(crm|sales|pipeline|leads|customer|prospect)\b/i,
+    'ai/llm': /\b(ai|llm|gpt|agent|automate|automation|chatbot)\b/i,
+    growth: /\b(grow|growth|follower|engagement|reach|viral|10k|100k)\b/i,
+    saas: /\b(saas|platform|subscription|cloud|enterprise)\b/i,
+    agency: /\b(agency|consulting|service|outsource|done.?for.?you)\b/i,
+    course: /\b(course|cohort|coaching|mentorship|masterclass|bootcamp)\b/i,
+    legal: /\b(legal|lawyer|compliance|gdpr|law)\b/i,
+    finance: /\b(account|tax|finance|bookkeep|payroll)\b/i,
+    devtool: /\b(dev|developer|api|sdk|framework|library)\b/i,
+  };
+  let theirDomain = 'general';
+  for (const [d, re] of Object.entries(domainKeywords)) {
+    if (re.test(tOrig)) { theirDomain = d; break; }
+  }
+
+  // Repeat offender?
+  const profileKey = (profile || '').toLowerCase().trim();
+  const repeat = state.blacklist.includes(profileKey)
+              || state.log.filter(l => (l.profile || '').toLowerCase() === profileKey).length >= 2;
+
+  // Bot signals
+  if ((tOrig.match(/[🔥💪🚀✨]/g) || []).length >= 3) signals.push('emoji-heavy');
+  if (/great (post|insight|points|read)/i.test(tOrig) && tOrig.length < 80) signals.push('generic-opener');
+  if (urlMatch) signals.push('link-included');
+  if (/\b(dm|message) me\b/i.test(tOrig)) signals.push('dm-cta');
+  if (repeat) signals.push('repeat-offender');
+
+  return { level, archetype, product, theirDomain, signals, repeat };
+}
+
+// ═══ TOOL SELECTOR ═══
+// Picks the most relevant of YOUR tools to mention based on their domain
+function selectTool(theirDomain, commentText) {
+  const t = (commentText || '').toLowerCase();
+  // Score each tool against the comment
+  let best = state.tools.find(x => x.id === state.settings.defaultTool) || state.tools[0];
+  let bestScore = 0;
+  for (const tool of state.tools) {
+    if (tool.id === 'fallflip') continue;  // don't mention this tool when flipping
+    const score = tool.match.reduce((s, kw) => s + (t.includes(kw) ? 1 : 0), 0);
+    if (score > bestScore) { best = tool; bestScore = score; }
+  }
+  return best;
+}
+
+// ═══ AGENT β · REPLY DRAFTER (for YOUR post) ═══
+function draftReply(analysis, comment, profile) {
+  const tool = selectTool(analysis.theirDomain, comment);
+  const name = extractName(comment, profile) || 'mate';
+  const theirThing = analysis.product || 'your platform';
+
+  // Level-specific templates
+  const templates = {
+    1: [
+      `Thanks ${name} — interesting that you're working in ${analysis.theirDomain} too. For anyone reading, the approach I took with ${tool.name} is ${tool.domain} — different angle to the same problem. Happy to compare notes.`,
+      `Cheers ${name}. The space you're in is adjacent to what I've been building — ${tool.name}, which is ${tool.domain}. Different philosophy, same underlying need. Worth a look if you're curious.`,
+    ],
+    2: [
+      `Thanks for stopping by, ${name}. Worth noting for other readers: ${tool.name} takes a different angle on this — ${tool.domain}. Same problem, sovereign approach.`,
+      `${name} — appreciate the mention. The contrast with ${tool.name} is the sovereignty angle: ${tool.domain}. One HTML file, no subscription, data on-device. Different trade-offs.`,
+    ],
+    3: [
+      `Appreciate the mention of ${theirThing}, ${name}. Different approach to the same problem — ${tool.name} is ${tool.domain}: sovereign, offline, no subscription. Worth a look if cloud-hosted doesn't fit the use case.`,
+      `${name}, ${theirThing} sounds like an interesting alternative. For folks reading, the contrast point is sovereignty — ${tool.name} runs from one HTML file, data stays on-device, no recurring cost. Different philosophy.`,
+    ],
+    4: [
+      `${name}, this reads like a copy-paste. The whole point of the post is in the architecture — ${tool.name} solves it as a single sovereign HTML file. No cloud, no subscription, no sign-up. If you're actually building in this space, take a look.`,
+      `Fair play for the effort, ${name}, but the comment doesn't engage with what was posted. ${tool.name} (${tool.domain}) takes the sovereign angle — worth comparing if you want to talk shop properly.`,
+    ],
+    5: [
+      `${name} — that one reads like it was pasted without reading. The point of ${tool.name} (${tool.domain}) is precisely that it can't be replaced by another SaaS subscription. If you want to actually engage with the architecture, happy to talk.`,
+      `Pasting links without reading the post isn't how this works, ${name}. For anyone who actually read it: ${tool.name} is ${tool.domain} — single HTML, sovereign, no signup.`,
+    ],
+  };
+
+  const arr = templates[analysis.level] || templates[3];
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ═══ AGENT γ · COUNTER DRAFTER (comment on THEIR post) ═══
+function draftCounter(analysis, comment, profile, theirTopic) {
+  const tool = selectTool(analysis.theirDomain, comment);
+  const topic = theirTopic || `${analysis.theirDomain}`;
+
+  const templates = [
+    `Solid take on ${topic}. One angle that doesn't always come up: sovereignty. I've been building ${tool.name} (${tool.domain}) — runs as a single HTML file, data on-device, no subscription. Curious whether your approach handles the offline / regulated-environment edge cases.`,
+    `Interesting framing of ${topic}. From the trenches of ${tool.domain} — I built ${tool.name} as a sovereign alternative, one HTML file, no cloud. The edge cases that pushed me there were ${edgeCase(analysis.theirDomain)}. How does your approach handle those?`,
+    `Good thread on ${topic}. I'd add one angle — for teams in regulated environments or with intermittent connectivity, cloud-based versions break down. ${tool.name} is my take on the sovereign alternative (${tool.domain}). Wondering if your customers hit that wall too.`,
+    `Genuine engagement on this — ${topic} is something I've been deep in via ${tool.name} (${tool.domain}). The contrast with the cloud approach is interesting. What's your read on the sovereignty / convenience trade-off for the audience you build for?`,
+  ];
+
+  return templates[Math.floor(Math.random() * templates.length)];
+}
+
+function edgeCase(domain) {
+  const cases = {
+    crm: 'field sales with patchy 4G and clients who refuse to put pipeline data in the cloud',
+    'ai/llm': 'enterprise clients who can\'t send prompts to external APIs',
+    growth: 'measuring conversion past the vanity metric',
+    saas: 'customers who churn the moment a subscription tier changes',
+    agency: 'projects where the deliverable has to survive the agency relationship ending',
+    course: 'students who need the framework still working a year after the course ends',
+    legal: 'firms where data sovereignty is a regulatory requirement, not a preference',
+    finance: 'sole traders who can\'t afford monthly subscriptions on top of their software stack',
+    devtool: 'air-gapped or offline-first deployments',
+  };
+  return cases[domain] || 'situations where the cloud isn\'t available';
+}
+
+// ═══ AGENT δ · DM ESCALATION ═══
+function draftDM(analysis, comment, profile) {
+  const tool = selectTool(analysis.theirDomain, comment);
+  const name = extractName(comment, profile) || 'there';
+
+  if (analysis.level >= 4) {
+    return `Hey ${name}, noticed the drop on my post. No hard feelings — but if you're going to promote ${analysis.product || 'your tool'} on my content, at least engage with what I actually wrote first. Otherwise it reads like a bot.\n\nIf you're genuinely working in this space, happy to talk shop. ${tool.name} (${tool.domain}) is what I'm building — be curious how you'd compare approaches.`;
+  } else {
+    return `Hey ${name} — appreciate the comment on my post. Quick note: when you drop a product mention on someone's content, it lands better if you engage with the post itself first. People notice.\n\nGenuine interest though — what's the ${analysis.product || 'your tool'} angle? I'm building ${tool.name} (${tool.domain}) and always curious where the design choices come out differently.`;
+  }
+}
+
+// ═══ NAME EXTRACTION ═══
+function extractName(comment, profile) {
+  // Try to extract from "name" hint in comment ("Thanks Simon")
+  if (/^thanks\s+[A-Z][a-z]+/i.test(comment || '')) {
+    const m = comment.match(/thanks\s+([A-Z][a-z]+)/i);
+    if (m) return m[1];
+  }
+  // Try profile URL slug
+  if (profile) {
+    const m = profile.match(/\/in\/([a-z0-9-]+)/i);
+    if (m) {
+      const slug = m[1].split('-')[0];
+      return slug.charAt(0).toUpperCase() + slug.slice(1);
+    }
+    // @handle
+    const h = profile.match(/^@(\w+)/);
+    if (h) return h[1].charAt(0).toUpperCase() + h[1].slice(1);
+  }
+  return null;
+}
+
+// ═══ MAIN FLIP ═══
+let lastAnalysis = null;
+let lastReply = null;
+let lastCounter = null;
+let lastDM = null;
+
+async function performFlip() {
+  const comment = document.getElementById('inComment').value.trim();
+  const profile = document.getElementById('inProfile').value.trim();
+  const theirPost = document.getElementById('inTheirPost').value.trim();
+  const topic = document.getElementById('inTopic').value.trim();
+
+  if (!comment) { toast('Paste their comment first'); return; }
+
+  // T0: offline templates
+  const analysis = analyseComment(comment, profile);
+  lastAnalysis = analysis;
+
+  // Show analysis
+  showAnalysis(analysis);
+
+  let reply = draftReply(analysis, comment, profile);
+  let counter = draftCounter(analysis, comment, profile, topic);
+  let dm = draftDM(analysis, comment, profile);
+
+  // T3: optional Gemini enhancement
+  if (state.settings.geminiKey) {
+    toast('Sharpening with AI...');
+    try {
+      const enhanced = await geminiEnhance({ analysis, comment, profile, topic, reply, counter, dm });
+      if (enhanced) {
+        if (enhanced.reply) reply = enhanced.reply;
+        if (enhanced.counter) counter = enhanced.counter;
+        if (enhanced.dm) dm = enhanced.dm;
+      }
+    } catch (e) { /* fall through to templates */ }
+  }
+
+  lastReply = reply;
+  lastCounter = counter;
+  lastDM = dm;
+
+  document.getElementById('outReply').textContent = reply;
+  document.getElementById('outCounter').textContent = counter;
+  document.getElementById('outDM').textContent = dm;
+  document.getElementById('outputEmpty').style.display = 'none';
+  document.getElementById('outputBody').style.display = 'block';
+
+  if (state.settings.autoLog) logCurrent(true);
+}
+
+function showAnalysis(a) {
+  const card = document.getElementById('analysisCard');
+  card.style.display = 'block';
+  const dots = document.querySelectorAll('.level-dot');
+  dots.forEach((d, i) => {
+    d.classList.remove('active', 'l1', 'l2', 'l3', 'l4', 'l5');
+    if (i < a.level) d.classList.add('active', 'l' + a.level);
+  });
+  document.getElementById('anLevel').textContent = a.level + '/5';
+  document.getElementById('anLevelName').textContent = a.archetype;
+
+  document.getElementById('analysisDetail').innerHTML = `
+    <div class="row"><span class="lbl">Archetype</span><span class="val">${escHTML(a.archetype)}</span></div>
+    <div class="row"><span class="lbl">Their product</span><span class="val">${escHTML(a.product || '— not detected')}</span></div>
+    <div class="row"><span class="lbl">Their domain</span><span class="val">${escHTML(a.theirDomain)}</span></div>
+    <div class="row"><span class="lbl">Signals</span><span class="val">${a.signals.length ? a.signals.map(s => `<span class="tag">${s}</span>`).join('') : '—'}</span></div>
+    ${a.repeat ? '<div class="row"><span class="lbl">⚠ Repeat offender</span><span class="val red">YES — sharper template applied</span></div>' : ''}
+  `;
+}
+
+async function regenerateAll() {
+  await performFlip();
+}
+
+function logCurrent(silent) {
+  if (!lastAnalysis) return;
+  const comment = document.getElementById('inComment').value.trim();
+  const profile = document.getElementById('inProfile').value.trim();
+  state.log.unshift({
+    ts: Date.now(),
+    profile,
+    comment: comment.slice(0, 200),
+    level: lastAnalysis.level,
+    archetype: lastAnalysis.archetype,
+    product: lastAnalysis.product,
+    domain: lastAnalysis.theirDomain,
+    replyUsed: lastReply,
+  });
+  state.log = state.log.slice(0, 200);
+  saveState();
+  if (!silent) toast('Logged');
+}
+
+function addToBlacklist() {
+  const profile = document.getElementById('inProfile').value.trim().toLowerCase();
+  if (!profile) { toast('Paste their profile first'); return; }
+  if (!state.blacklist.includes(profile)) state.blacklist.push(profile);
+  saveState();
+  toast('🚫 Blacklisted — next flip uses sharper template');
+}
+
+// ═══ GEMINI T3 (optional) ═══
+async function geminiEnhance({ analysis, comment, profile, topic, reply, counter, dm }) {
+  const key = state.settings.geminiKey;
+  if (!key) return null;
+  const tool = selectTool(analysis.theirDomain, comment);
+  const sys = `You are FallFlip · a professional response generator for LinkedIn self-promo. Voice: sharp but never hostile, useful to readers, mentions Simon's tool naturally not pushily. Never aggressive, no passive-aggression, no sarcasm. CFO-reads professional. Each output is plain text, no markdown, no emoji unless original used them.`;
+  const usr = `SPAM COMMENT (level ${analysis.level}/5 · ${analysis.archetype}):
+"${comment}"
+
+THEIR PROFILE: ${profile || '(unknown)'}
+THEIR PRODUCT (if detected): ${analysis.product || '(unknown)'}
+THEIR DOMAIN: ${analysis.theirDomain}
+THEIR LATEST POST TOPIC (for counter): ${topic || '(generic in their domain)'}
+
+YOUR TOOL TO MENTION: ${tool.name} — ${tool.domain}
+YOUR NAME: ${state.settings.yourName}
+
+Generate THREE responses as plain JSON:
+{
+ "reply":   "the reply to their comment on YOUR post · 2-4 sentences · proportional to spam level",
+ "counter": "a genuine value-adding comment on THEIR latest post that naturally mentions ${tool.name} · 2-4 sentences",
+ "dm":      "an optional DM if escalation needed · 3-5 sentences · firm but not hostile"
+}
+
+DRAFTS YOU CAN IMPROVE ON (or replace):
+REPLY: ${reply}
+COUNTER: ${counter}
+DM: ${dm}
+
+Respond ONLY with the JSON object, no other text.`;
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: sys + '\n\n' + usr }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+      })
+    });
+    const data = await res.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const json = text.match(/\{[\s\S]*?\}/)?.[0];
+    return json ? JSON.parse(json) : null;
+  } catch (e) { return null; }
+}
+
+// ═══ COPY ═══
+document.addEventListener('click', e => {
+  const cp = e.target.closest('.copy-btn');
+  if (!cp) return;
+  const target = document.getElementById(cp.dataset.copy);
+  if (!target) return;
+  navigator.clipboard.writeText(target.textContent).then(() => {
+    cp.classList.add('copied');
+    cp.textContent = '✓ Copied';
+    setTimeout(() => { cp.classList.remove('copied'); cp.textContent = '📋 Copy'; }, 1400);
+  }).catch(() => toast('Copy failed · select & copy manually'));
+});
+
+// ═══ MODALS ═══
+function showModal(title, body) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = body;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+
+document.getElementById('btnLog').addEventListener('click', showLog);
+document.getElementById('btnSettings').addEventListener('click', showSettings);
+document.getElementById('btnFlip').addEventListener('click', performFlip);
+
+function showLog() {
+  if (!state.log.length) {
+    showModal('Flip log', '<div class="empty"><div class="icon">📋</div><p>No flips logged yet.</p></div>');
+    return;
+  }
+  const html = state.log.map(l => `
+    <div class="log-item">
+      <div class="hd">
+        <div><span class="tag gold">L${l.level}</span> ${escHTML(l.archetype)} · ${escHTML(l.domain)}</div>
+        <div class="when">${new Date(l.ts).toLocaleString('en-GB')}</div>
+      </div>
+      <div><b>${escHTML(l.profile || '(no profile)')}</b>${l.product ? ' · ' + escHTML(l.product) : ''}</div>
+      <div class="quote">"${escHTML(l.comment)}"</div>
+    </div>`).join('');
+  showModal('Flip log · ' + state.log.length + ' entries', html + `
+    <div style="margin-top:16px" class="toolbar">
+      <button class="btn secondary small" onclick="exportLog()">📥 Export JSON</button>
+      <button class="btn secondary small" onclick="clearLog()">🗑 Clear log</button>
+    </div>`);
+}
+
+async function clearLog() {
+  if (!confirm('Clear all logged flips?')) return;
+  state.log = [];
+  await saveState();
+  closeModal();
+  toast('Log cleared');
+}
+
+function exportLog() {
+  const data = JSON.stringify({ exported: new Date().toISOString(), version: VERSION, state }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `fallflip-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('Backup downloaded');
+}
+
+function showSettings() {
+  const toolsHTML = state.tools.map(t => `
+    <div class="tool-chip ${t.id === state.settings.defaultTool ? 'active' : ''}" onclick="setDefaultTool('${t.id}')">
+      <div class="name">${escHTML(t.name)}</div>
+      <div class="domain">${escHTML(t.domain)}</div>
+    </div>`).join('');
+
+  showModal('Settings', `
+    <div class="field"><label>Your name</label><input id="setName" value="${escHTML(state.settings.yourName)}"></div>
+    <div class="field"><label>Your profile URL</label><input id="setProfile" value="${escHTML(state.settings.yourProfile)}"></div>
+
+    <h3 style="margin:20px 0 8px;color:var(--gold);font-size:14px;text-transform:uppercase;letter-spacing:0.06em">Default tool to mention (fallback)</h3>
+    <div class="tools-grid">${toolsHTML}</div>
+
+    <h3 style="margin:20px 0 8px;color:var(--gold);font-size:14px;text-transform:uppercase;letter-spacing:0.06em">AI sharpening (optional)</h3>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:8px">Paste a free Gemini API key to get sharper, more contextual responses. <a style="color:var(--gold)" href="https://aistudio.google.com/apikey" target="_blank">Get one</a>. Stored on your device only.</p>
+    <div class="field"><label>Gemini API key</label><input id="setGemini" type="password" value="${escHTML(state.settings.geminiKey)}" placeholder="paste key here · optional"></div>
+
+    <h3 style="margin:20px 0 8px;color:var(--gold);font-size:14px;text-transform:uppercase;letter-spacing:0.06em">Behaviour</h3>
+    <div class="field"><label><input type="checkbox" id="setAutoLog" ${state.settings.autoLog ? 'checked' : ''}> Auto-log every flip</label></div>
+
+    <h3 style="margin:20px 0 8px;color:var(--gold);font-size:14px;text-transform:uppercase;letter-spacing:0.06em">Backup</h3>
+    <div class="toolbar">
+      <button class="btn secondary small" onclick="exportLog()">📥 Export everything</button>
+      <button class="btn secondary small" onclick="importBackup()">📤 Restore</button>
+    </div>
+
+    <div style="margin-top:24px;text-align:center;color:var(--muted);font-size:12px">
+      FallFlip · v${VERSION} · ◊·κ=1 · sovereign · prime ${PRIME}<br>
+      The mirror · proportional · profitable
+    </div>
+    <div style="margin-top:16px"><button class="btn" onclick="saveAllSettings()">Save settings</button></div>
+  `);
+}
+
+window.setDefaultTool = function(id) {
+  state.settings.defaultTool = id;
+  document.querySelectorAll('.tool-chip').forEach(c => c.classList.remove('active'));
+  event.target.closest('.tool-chip').classList.add('active');
+};
+
+async function saveAllSettings() {
+  state.settings.yourName = document.getElementById('setName').value || 'Simon';
+  state.settings.yourProfile = document.getElementById('setProfile').value || '';
+  state.settings.geminiKey = document.getElementById('setGemini').value || '';
+  state.settings.autoLog = document.getElementById('setAutoLog').checked;
+  await saveState();
+  closeModal();
+  toast('Settings saved');
+}
+
+function importBackup() {
+  const i = document.createElement('input');
+  i.type = 'file';
+  i.accept = 'application/json,.json';
+  i.onchange = async () => {
+    const f = i.files[0]; if (!f) return;
+    const text = await f.text();
+    try {
+      const obj = JSON.parse(text);
+      if (obj.state) {
+        if (!confirm('This REPLACES current data. Continue?')) return;
+        state = Object.assign(state, obj.state);
+        await saveState();
+        closeModal();
+        toast('Restored');
+      }
+    } catch (e) { toast('Bad backup file'); }
+  };
+  i.click();
+}
+
+// ═══ UTIL ═══
+function escHTML(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ═══ KONOMI LICENCE SHIM ═══
+window.KONOMI = {
+  active: true, tier: 'sovereign', trial: false, licenceId: null,
+  check: () => ({ ok: true, tier: 'sovereign', note: 'Single-file sovereign build · no licence gate' }),
+};
+
+// ═══ FALLMESH SHIM ═══
+try {
+  const sig = new BroadcastChannel('fall-signal');
+  sig.postMessage({ source: 'fallflip', type: 'hello', prime: PRIME, version: VERSION, ts: Date.now() });
+  sig.addEventListener('message', e => {
+    const m = e.data;
+    if (m && m.type === 'ping') sig.postMessage({ source: 'fallflip', type: 'pong', prime: PRIME });
+  });
+} catch (e) {}
+
+// ═══ BOOT ═══
+(async function init() {
+  await loadState();
+})();
+
+</script>
+</body>
+</html>
